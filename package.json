@@ -12,7 +12,9 @@
   "dependencies": {
     "express": "^4.17.1",
     "knex": "^0.20.1",
-    "pg": "^7.12.1"
+    "lodash": "^4.17.15",
+    "pg": "^7.12.1",
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "chai": "^4.2.0",
