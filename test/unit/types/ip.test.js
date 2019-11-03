@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const types = require('../../../src/types/');
 
 describe('types.ip', () => {
-    describe.only('isValid', () => {
+    describe('isValid', () => {
         const scenarios = [
             {
                 ip: 192168001,
