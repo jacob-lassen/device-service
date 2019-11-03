@@ -10,4 +10,4 @@ app.get(`/tests`, makeExpressAdapter(deviceRoutes.test))
 
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`)
-})
+});
