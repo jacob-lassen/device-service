@@ -7,6 +7,7 @@ describe('types.uuid', () => {
             {
                 uuid: 4321,
                 isValid: false,
+                description: 'No a string',
             },
             {
                 uuid: '46db4697a7082b43b1cb1e6d05f25531b023',
