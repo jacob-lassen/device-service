@@ -1,5 +1,6 @@
 const uuidV4 = require('uuid/v4');
 const _ = require('lodash');
+const isHex = require('./isHex');
 
 /**
  * @returns {string}
@@ -57,15 +58,6 @@ function validUuidSegment(length, segment) {
     }
 
     return true;
-}
-
-/**
- * @param {string} value
- * @returns {boolean}
- */
-function isHex(value) {
-    const isHexadecimalReq = /^[0-9a-f]+$/g;
-    return isHexadecimalReq.test(value);
 }
 
 module.exports = {
