@@ -1,10 +1,17 @@
 const uuidV4 = require('uuid/v4');
 const _ = require('lodash');
 
+/**
+ * @returns {string}
+ */
 function make() {
     return uuidV4();
 }
 
+/**
+ * @param {string} uuid
+ * @returns {boolean}
+ */
 function isValid(uuid) {
     if (!_.isString(uuid)) {
         return false;
@@ -35,6 +42,11 @@ function isValid(uuid) {
     return true;
 }
 
+/**
+ * @param {number} length
+ * @param {string} segment
+ * @returns {boolean}
+ */
 function validUuidSegment(length, segment) {
     if (segment.length !== length) {
         return false;
@@ -47,6 +59,10 @@ function validUuidSegment(length, segment) {
     return true;
 }
 
+/**
+ * @param {string} value
+ * @returns {boolean}
+ */
 function isHex(value) {
     const isHexadecimalReq = /^[0-9a-f]+$/g;
     return isHexadecimalReq.test(value);
