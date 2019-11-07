@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
-const makeExpressAdapter = require('../../../src/adapters/expressAdapter');
+const makeExpressAdapter = require('../../../src/adapters/ioAdapters/expressAdapter');
 
 function delay(timeToWait) {
     return new Promise((resolve) => {
@@ -28,138 +28,131 @@ function makeFakeNext() {
     return sinon.spy();
 }
 
-describe('expressAdapter', () => {
-    it('Calls next when middleware is done', async () => {
-        const timeToWait = 3;
-        async function middleware(request, response, next) {
-            await delay(timeToWait);
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+describe.only('expressAdapter', () => {
+    it('Calls middleware', async () => {
+        const middleware = sinon.spy();
+        const adaptedMiddleware = makeExpressAdapter(middleware);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
 
-        expect(fakeNext).to.have.ownProperty('called')
-            .and.equal(false);
-        await delay(timeToWait + 1);
-        expect(fakeNext).to.have.ownProperty('called')
-            .and.equal(true);
+        expect(middleware).to.have.ownProperty('called')
+            .and.be.true;
     });
 
-    it('Correctly send json response', async () => {
-        const json = {a: 1};
-        async function middleware(request, response, next) {
-            response.json(json);
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+    it('Sets sends 204 when no data is undefined', async () => {
+        const middleware = (input, output) => {
+            output.setData(undefined);
+        };
+        const adaptedMiddleware = makeExpressAdapter(middleware);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
-        await delay(1);
-        expect(fakeResponse.json).to.have.ownProperty('called')
-            .and.equal(true);
-        expect(fakeResponse.json.firstCall.args[0]).to.deep.equal(json);
+
+        await delay(0);
+        const [status] = fakeResponse.status.lastCall.args;
+        expect(status).to.equal(204);
     });
 
-    it('Correctly sends non json response', async () => {
-        const text = 'Some message';
-        async function middleware(request, response, next) {
-            response.text(text);
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+    it('Sets sends 204 when data is null', async () => {
+        const middleware = (input, output) => {
+            output.setData(null);
+        };
+        const adaptedMiddleware = makeExpressAdapter(middleware);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
-        await delay(1);
-        expect(fakeResponse.send).to.have.ownProperty('called')
-            .and.equal(true);
-        expect(fakeResponse.send.firstCall.args[0]).to.equal(text);
+
+        await delay(0)
+        const [status] = fakeResponse.status.lastCall.args;
+        expect(status).to.equal(204);
     });
 
-    it('Correctly sends response status', async () => {
-        const status = 204;
-        async function middleware(request, response, next) {
-            response.status(status).json([]);
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+    it('Sets sends 204 when no data is empty string', async () => {
+        const middleware = (input, output) => {
+            output.setData('');
+        };
+        const adaptedMiddleware = makeExpressAdapter(middleware);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
-        await delay(1);
-        expect(fakeResponse.status).to.have.ownProperty('called')
-            .and.equal(true);
-        expect(fakeResponse.status.firstCall.args[0]).to.equal(status);
+
+        await delay(0)
+        const [status] = fakeResponse.status.lastCall.args;
+        expect(status).to.equal(204);
     });
 
-
-    it('Uses status 200 as default', async () => {
-        async function middleware(request, response, next) {
-            response.json([]);
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+    it('Sets sends 200 when data is a string', async () => {
+        const middleware = (input, output) => {
+            output.setData('String');
+        };
+        const adaptedMiddleware = makeExpressAdapter(middleware);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
-        await delay(1);
-        expect(fakeResponse.status).to.have.ownProperty('called')
-            .and.equal(true);
-        expect(fakeResponse.status.firstCall.args[0]).to.equal(200);
+
+        await delay(0)
+        const [status] = fakeResponse.status.lastCall.args;
+        expect(status).to.equal(200);
     });
 
-    it('Creates adapters for array of middlewares', async () => {
-        const middlewares = [
-            (a) => a,
-            (a) => a,
-            (a) => a,
-        ]
-        const adaptedMiddlewares = makeExpressAdapter(middlewares);
-        expect(adaptedMiddlewares).to.have.lengthOf(middlewares.length);
-    });
-
-    it('Calls next when no response is send', async () => {
-        async function middleware(request, response, next) {
-            next();
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+    it('Sets sends 200 json response when data is a object', async () => {
+        const data = {a: 'a'};
+        const middleware = (input, output) => {
+            output.setData(data);
+        };
+        const adaptedMiddleware = makeExpressAdapter(middleware);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
-        await delay(1);
-        expect(fakeNext).to.have.ownProperty('called')
-            .and.equal(true);
+
+        await delay(0)
+        const [jsonData] = fakeResponse.json.lastCall.args;
+        expect(jsonData).to.deep.equal(data);
     });
 
-    it('Calls next when synchronous middleware ends without sending response', async () => {
-        function middleware(request, response, next) {
-            const a = 10 * 42;
-            const b = 'Does some stuff';
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+    it('Sends response when last middleware is done', async () => {
+        const middleware1 = (input, output) => {
+            expect(fakeResponse).to.have.ownProperty('status')
+                .and.have.ownProperty('lastCall')
+                .and.be.null;
+        };
+        const middleware2 = (input, output) => {
+            expect(fakeResponse).to.have.ownProperty('status')
+                .and.have.ownProperty('lastCall')
+                .and.be.null;
+        };
+        const adaptedMiddleware = makeExpressAdapter([middleware1, middleware2]);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
-        await delay(1);
-        expect(fakeNext).to.have.ownProperty('called')
-            .and.equal(true);
+
+        await delay(0)
+        expect(fakeResponse).to.have.ownProperty('status')
+                .and.have.ownProperty('lastCall')
+                .and.not.be.null;
     });
 
     it('Sends error response when error is thrown', async () => {
-        function middleware(request, response, next) {
-            throw 'Oh no a error!';
-        }
-        const [adaptedMiddleware] = makeExpressAdapter(middleware);
+        console.log = () => undefined;
+        const middleware = (input, output) => {
+            throw 'Throw anything with a stack trace makes the adapter log it';
+        };
+        const adaptedMiddleware = makeExpressAdapter(middleware);
         const fakeRequest = makeFakeRequest();
         const fakeResponse = makeFakeResponse();
         const fakeNext = makeFakeNext();
         adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
-        await delay(1);
-        expect(fakeResponse.status.firstCall.args[0]).to.equal(500);
+
+        await delay(0)
+        const [status] = fakeResponse.status.lastCall.args;
+        expect(status).to.equal(500);
     });
 });
