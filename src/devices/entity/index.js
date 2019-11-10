@@ -7,9 +7,15 @@ function makeDevice({
     mac,
     name,
     lastSeen,
-    createdAt = new Date(),
+    createdAt,
     updatedAt,
 }) {
+    if (uuid === undefined) {
+        uuid = types.uuid.make();
+        createdAt = createdAt ? createdAt : new Date();
+        lastSeen = createdAt;
+        updatedAt = createdAt;
+    }
     if (!types.uuid.isValid(uuid)) {
         throw new Error('Device must have valid uuid');
     }
@@ -30,6 +36,10 @@ function makeDevice({
         throw new Error('Device must have last seen');
     }
 
+    if (!_.isDate(createdAt)) {
+        throw new Error('Device must have updated at');
+    }
+
     if (!_.isDate(updatedAt)) {
         throw new Error('Device must have updated at');
     }
@@ -39,7 +49,9 @@ function makeDevice({
         getIp: () => ip,
         getMac: () => mac,
         getName: () => name,
-        getLastSeen: () => lastSeen,
+        getLastSeen: () => {
+            return lastSeen;
+        },
         getCreatedAt: () => createdAt,
         getUpdatedAt: () => updatedAt,
     }

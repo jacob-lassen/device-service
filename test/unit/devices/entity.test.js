@@ -110,11 +110,13 @@ describe('device.entity', () => {
         expect(device.getCreatedAt()).to.equal(fakeDevice.createdAt);
     });
 
-    it('created at has default value', () => {
+    it('Throws error when created at is not a date', () => {
         const fakeDevice = makeFakeDevice();
-        delete fakeDevice.createdAt;
-        const device = makeDevice(fakeDevice);
-        expect(device.getCreatedAt()).to.be.an('Date');
+        fakeDevice.createdAt = '2019-10-02 10:00:00';
+        const callWrapper = () => {
+            makeDevice(fakeDevice);
+        }
+        expect(callWrapper).to.throw();
     });
 
     it('Has updated at', () => {
@@ -131,5 +133,19 @@ describe('device.entity', () => {
             makeDevice(fakeDevice);
         }
         expect(callWrapper).to.throw();
+    });
+
+    it('Sets default create state when uuid is not set', () => {
+        const fakeDevice = makeFakeDevice();
+        delete fakeDevice.uuid;
+        delete fakeDevice.lastSeen;
+        delete fakeDevice.createdAt;
+        delete fakeDevice.updateAt;
+        const now = new Date();
+        const device = makeDevice(fakeDevice);
+        expect(device.getUuid()).to.be.a('string');
+        expect(device.getLastSeen().getTime()).to.be.gte(now.getTime());
+        expect(device.getCreatedAt().getTime()).to.be.gte(now.getTime());
+        expect(device.getUpdatedAt().getTime()).to.be.gte(now.getTime());
     });
 });
