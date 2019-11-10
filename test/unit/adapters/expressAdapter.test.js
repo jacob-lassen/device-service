@@ -28,7 +28,7 @@ function makeFakeNext() {
     return sinon.spy();
 }
 
-describe.only('expressAdapter', () => {
+describe('expressAdapter', () => {
     it('Calls middleware', async () => {
         const middleware = sinon.spy();
         const adaptedMiddleware = makeExpressAdapter(middleware);
