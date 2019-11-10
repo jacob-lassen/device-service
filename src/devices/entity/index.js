@@ -54,6 +54,17 @@ function makeDevice({
         },
         getCreatedAt: () => createdAt,
         getUpdatedAt: () => updatedAt,
+        update: (updates = {}) => {
+            return makeDevice({
+                uuid: uuid,
+                ip: updates.ip || ip,
+                mac: updates.mac || mac,
+                name: updates.name || name,
+                lastSeen: updates.lastSeen || new Date(lastSeen),
+                createdAt: new Date(createdAt),
+                updatedAt: new Date(),
+            });
+        }
     }
 }
 

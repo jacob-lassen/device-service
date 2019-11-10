@@ -148,4 +148,40 @@ describe('device.entity', () => {
         expect(device.getCreatedAt().getTime()).to.be.gte(now.getTime());
         expect(device.getUpdatedAt().getTime()).to.be.gte(now.getTime());
     });
+
+    it('ip is update able', () => {
+        const newIp = '140.73.246.16';
+        const fakeDevice = makeFakeDevice();
+        const device = makeDevice(fakeDevice);
+        const updatedDevice = device.update({ip: newIp});
+        expect(updatedDevice.getIp()).to.equal(newIp);
+        expect(updatedDevice.getIp()).to.not.equal(device.getIp());
+    });
+
+    it('Updating mac sets updated at', () => {
+        const newMac = '8a:c8:00:1f:af:ea';
+        const fakeDevice = makeFakeDevice();
+        const device = makeDevice(fakeDevice);
+        const updatedDevice = device.update({mac: newMac});
+        expect(updatedDevice.getMac()).to.equal(newMac);
+        expect(updatedDevice.getMac()).to.not.equal(device.getMac());
+    });
+
+    it('Updating name sets updated at', () => {
+        const newName = 'New name !!!!!';
+        const fakeDevice = makeFakeDevice();
+        const device = makeDevice(fakeDevice);
+        const updatedDevice = device.update({name: newName});
+        expect(updatedDevice.getName()).to.equal(newName);
+        expect(updatedDevice.getName()).to.not.equal(device.getName());
+    });
+
+    it('Updating last seen sets updated at', () => {
+        const newLastSeen = new Date('2019-11-11 01:02:03');
+        const fakeDevice = makeFakeDevice();
+        const device = makeDevice(fakeDevice);
+        const updatedDevice = device.update({lastSeen: newLastSeen});
+        expect(updatedDevice.getLastSeen()).to.equal(newLastSeen);
+        expect(updatedDevice.getLastSeen()).to.not.equal(device.getLastSeen());
+    });
 });
