@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const makeInput = require('./makeInput');
 const makeOutput = require('./makeOutput');
+const { CoreError, codes } = require('../../CoreError');
 
 /**
  * @param {Array<function>} middlewares
@@ -62,7 +63,22 @@ function sendError(res, err) {
     if (err.stack) {
         console.error(err.stack);
     }
-    res.status(500).send(err.message);
+    const coreError = new CoreError({
+        code: _.has(err, 'code') ? err.code : codes.internal,
+        message: _.has(err, 'code') ? err.message : codes.message,
+    });
+    res.status(getStatus(err.code)).json(coreError);
+}
+
+/**
+ * @param {string} code
+ * @returns {number}
+ */
+function getStatus(code) {
+    if (code === codes.validation) {
+        return 400;
+    }
+    return 500;
 }
 
 

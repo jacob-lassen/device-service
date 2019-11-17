@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
 const makeExpressAdapter = require('../../../src/adapters/ioAdapters/expressAdapter');
+const { CoreError, codes } = require('../../../src/CoreError');
 
 function delay(timeToWait) {
     return new Promise((resolve) => {
@@ -29,6 +30,14 @@ function makeFakeNext() {
 }
 
 describe('expressAdapter', () => {
+    beforeEach(() => {
+        sinon.stub(console, "error")
+    });
+
+    afterEach(() => {
+        console.error.restore();
+    })
+
     it('Calls middleware', async () => {
         const middleware = sinon.spy();
         const adaptedMiddleware = makeExpressAdapter(middleware);
@@ -141,18 +150,40 @@ describe('expressAdapter', () => {
     });
 
     it('Sends error response when error is thrown', async () => {
-        console.log = () => undefined;
         const middleware = (input, output) => {
             throw 'Throw anything with a stack trace makes the adapter log it';
         };
-        const adaptedMiddleware = makeExpressAdapter(middleware);
-        const fakeRequest = makeFakeRequest();
-        const fakeResponse = makeFakeResponse();
-        const fakeNext = makeFakeNext();
-        adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
+        await testStatus(500, middleware);
+    });
+    const errorMappingScenarios = [
+        {
+            error: new CoreError({ code: codes.validation }),
+            httpStatus: 400,
+        },
+        {
+            error: new CoreError({ code: codes.internal }),
+            httpStatus: 500,
+        },
+    ]
 
-        await delay(0)
-        const [status] = fakeResponse.status.lastCall.args;
-        expect(status).to.equal(500);
+    errorMappingScenarios.forEach((scenario) => {
+        it(`maps errorCode ${scenario.error.code} to ${scenario.httpStatus}`, async () => {
+            const middleware = (input, output) => {
+                throw scenario.error;
+            };
+            await testStatus(scenario.httpStatus, middleware);
+        });
     });
 });
+
+async function testStatus(expectedStatus, middleware) {
+    const adaptedMiddleware = makeExpressAdapter(middleware);
+    const fakeRequest = makeFakeRequest();
+    const fakeResponse = makeFakeResponse();
+    const fakeNext = makeFakeNext();
+    adaptedMiddleware(fakeRequest, fakeResponse, fakeNext);
+
+    await delay(0)
+    const [status] = fakeResponse.status.lastCall.args;
+    expect(status).to.equal(expectedStatus);
+};
